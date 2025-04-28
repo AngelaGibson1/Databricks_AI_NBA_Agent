@@ -1,0 +1,81 @@
+from databricks.agents import Agent
+import json
+import time
+
+def run_test_cases(agent_path, test_cases_path, output_path=None):
+    """
+    Run a set of test cases against an agent
+    
+    Args:
+        agent_path: Path to the agent in Databricks workspace
+        test_cases_path: Path to JSON file with test cases
+        output_path: Optional path to save test results
+    
+    Returns:
+        Dictionary with test results
+    """
+    # Load agent
+    agent = Agent.load(agent_path)
+    
+    # Load test cases
+    with open(test_cases_path, "r") as f:
+        test_cases = json.load(f)
+    
+    results = []
+    
+    # Run each test case
+    for test_case in test_cases:
+        print(f"Running test: {test_case['name']}")
+        
+        start_time = time.time()
+        response = agent.run(test_case["query"])
+        end_time = time.time()
+        
+        # Evaluate success criteria
+        success_criteria_met = []
+        for criterion in test_case["success_criteria"]:
+            is_met = criterion.lower() in response.lower()
+            success_criteria_met.append({
+                "criterion": criterion,
+                "met": is_met
+            })
+        
+        # Calculate overall success
+        success_rate = sum(1 for c in success_criteria_met if c["met"]) / len(success_criteria_met)
+        
+        result = {
+            "test_name": test_case["name"],
+            "query": test_case["query"],
+            "response": response,
+            "success_criteria_met": success_criteria_met,
+            "success_rate": success_rate,
+            "response_time": end_time - start_time
+        }
+        
+        results.append(result)
+    
+    # Calculate overall performance
+    overall_success_rate = sum(r["success_rate"] for r in results) / len(results)
+    average_response_time = sum(r["response_time"] for r in results) / len(results)
+    
+    final_results = {
+        "test_results": results,
+        "overall_success_rate": overall_success_rate,
+        "average_response_time": average_response_time,
+        "timestamp": time.time()
+    }
+    
+    # Save results if output path provided
+    if output_path:
+        with open(output_path, "w") as f:
+            json.dump(final_results, f, indent=2)
+    
+    return final_results
+
+# Run tests for the NBA Analysis agent
+run_test_cases(
+    agent_path="/Shared/Agents/NBA_Performance_Analyst",
+    test_cases_path="/Workspace/Repos/databricks-agent-playbook/config/test/nba_agent_test_cases.json",
+    output_path="/dbfs/FileStore/agent_test_results/nba_agent_results.json"
+)
+```
