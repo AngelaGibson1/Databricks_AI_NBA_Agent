@@ -1,0 +1,33 @@
+YAML configuration for the agent:
+
+```yaml
+# config/dev/agent_config.yml
+
+# Agent configuration for development environment
+model_serving:
+  workload_size: SMALL
+  scale_to_zero: true
+  timeout_seconds: 300
+  max_concurrent_requests: 10
+
+environment_vars:
+  DEBUG_LEVEL: INFO
+  CONTEXT_LENGTH: 8192
+  ENABLE_TRACING: true
+  
+monitoring:
+  log_level: DEBUG
+  metrics_enabled: true
+  trace_sampling_rate: 1.0
+  alert_on_error: true
+  
+memory:
+  conversation_buffer_size: 10
+  vector_store_enabled: true
+  
+security:
+  allowed_catalog_access:
+    - workspace.sports_ai
+  allowed_notebook_paths:
+    - /Shared/NBA Analytics/Functions
+```
