@@ -1,0 +1,81 @@
+### 2. Function Implementations
+
+Functions provide the core capabilities that agents can use:
+
+```python
+# notebooks/functions/player_analysis_functions.py
+
+# Set up the catalog and schema
+spark.sql("USE CATALOG workspace")
+spark.sql("USE SCHEMA sports_ai")
+
+def get_player_profile(name: str) -> str:
+    """
+    Returns a player's career timeline and basic bio info.
+    
+    Args:
+        name: The player's name
+        
+    Returns:
+        A string with the player's profile information
+    """
+    df = spark.table("player_data")
+    result = df.filter(df.name == name).limit(1).collect()
+    
+    if not result:
+        return f"No profile found for {name}."
+    
+    row = result[0]
+    return (
+        f"{row['name']} played from {row['year_start']} to {row['year_end']}, "
+        f"stood {row['height']}, weighed {row['weight']} lbs, "
+        f"and went to {row['college']}."
+    )
+
+def get_player_career_stats(name: str) -> dict:
+    """
+    Returns a player's career average statistics.
+    
+    Args:
+        name: The player's name
+        
+    Returns:
+        Dictionary with career averages for key statistics
+    """
+    # Query the seasons stats table
+    stats_df = spark.sql(f"""
+        SELECT 
+            Player,
+            COUNT(DISTINCT Year) as seasons,
+            AVG(PTS) as ppg,
+            AVG(TRB) as rpg,
+            AVG(AST) as apg,
+            AVG(`FG%`) as fg_pct,
+            AVG(`3P%`) as fg3_pct,
+            AVG(`FT%`) as ft_pct,
+            AVG(WS) as win_shares
+        FROM Seasons_Stats
+        WHERE Player = '{name}'
+        GROUP BY Player
+    """)
+    
+    result = stats_df.collect()
+    
+    if not result:
+        return {"error": f"No stats found for {name}."}
+    
+    row = result[0]
+    return {
+        "player": row["Player"],
+        "seasons": int(row["seasons"]),
+        "ppg": round(float(row["ppg"]), 1),
+        "rpg": round(float(row["rpg"]), 1),
+        "apg": round(float(row["apg"]), 1),
+        "fg_pct": round(float(row["fg_pct"]) * 100, 1),
+        "fg3_pct": round(float(row["fg3_pct"]) * 100, 1) if row["fg3_pct"] is not None else None,
+        "ft_pct": round(float(row["ft_pct"]) * 100, 1),
+        "win_shares": round(float(row["win_shares"]), 1)
+    }
+
+# Additional functions omitted for brevity
+```
