@@ -1,0 +1,110 @@
+### 1. Agent Definitions
+
+The heart of the playbook is the agent implementation. Example for the NBA Analysis Agent:
+
+```python
+# notebooks/agents/nba_analysis_agent.py
+
+from databricks.agents import Agent, SQLToolkit, NotebookToolkit, VisualizationToolkit
+from databricks.agents.memory import ConversationBufferMemory, VectorDBQAMemory, TableSchemaMemory
+
+# Define NBA Agent instructions
+nba_agent_instructions = """
+# NBA ANALYSIS AGENT INSTRUCTIONS
+
+## AGENT ROLE AND PURPOSE
+You are an NBA Performance Analysis Agent built within Databricks. Your purpose is to help basketball operations staff analyze player performance data, identify trends, and make data-driven decisions about player development, lineups, and team strategy.
+
+## AVAILABLE DATA SOURCES
+You have access to the following data sources:
+1. player_data.csv: Contains biographical information about players
+2. Players.csv: Contains additional player information including birthplace
+3. Seasons_Stats.csv: Contains detailed season statistics for players
+
+## EXPECTED BEHAVIOR
+- Always confirm data availability before attempting analysis
+- Use SQL queries to access data rather than assuming values
+- Present statistical findings with appropriate context (league averages, historical comparisons)
+- When making player comparisons, consider position, era, and team context
+- For visual data, suggest appropriate chart types (e.g., scatter plots for correlation analysis)
+- Acknowledge limitations in the data when they exist
+
+## CLARIFICATION PROTOCOL
+When receiving ambiguous requests, ask clarifying questions about:
+1. Time period of interest (specific seasons or career totals)
+2. Metrics that matter most for the analysis
+3. Whether to account for positional differences
+4. The level of statistical detail required
+5. Whether visualization would be helpful
+
+# Additional sections omitted for brevity
+"""
+
+# Define SQL queries for player performance analysis
+performance_queries = {
+    "career_stats": """
+        SELECT p.name, p.position, p.height, p.weight, p.college,
+               AVG(s.PTS) as avg_points, AVG(s.TRB) as avg_rebounds, 
+               AVG(s.AST) as avg_assists, AVG(s.STL) as avg_steals,
+               AVG(s.BLK) as avg_blocks, AVG(s.`TS%`) as avg_ts_pct,
+               COUNT(DISTINCT s.Year) as seasons_played
+        FROM player_data p
+        JOIN Seasons_Stats s ON p.name = s.Player
+        WHERE p.name LIKE '%{player_name}%'
+        GROUP BY p.name, p.position, p.height, p.weight, p.college
+    """,
+    # Additional SQL templates omitted for brevity
+}
+
+# Create the agent
+nba_analysis_agent = Agent(
+    name="NBA Performance Analyst",
+    description="Expert NBA data analyst with access to historical player and team statistics",
+    instructions=nba_agent_instructions,
+    toolkits=[
+        SQLToolkit(
+            catalog="nba_data",
+            schema="public",
+            query_templates=performance_queries
+        ),
+        NotebookToolkit(
+            workspace_dir="/Shared/NBA Analytics/Functions",
+            allowed_notebooks=["player_analysis_functions.py"]
+        ),
+        VisualizationToolkit(
+            allowed_chart_types=["bar", "line", "radar", "scatter"]
+        )
+    ],
+    memory={
+        "short_term": ConversationBufferMemory(
+            return_messages=True,
+            memory_key="chat_history",
+            input_key="input",
+            output_key="output",
+            k=10
+        ),
+        "schema": TableSchemaMemory(
+            catalog="nba_data",
+            schema="public",
+            cache_ttl_seconds=3600,
+            include_samples=True,
+            samples_per_table=5
+        )
+    },
+    model="databricks/dbrx-instruct",
+    temperature=0.2,
+    max_tokens=2048
+)
+
+# Register the agent in the workspace
+nba_analysis_agent.save(
+    path="/Shared/Agents/NBA_Performance_Analyst",
+    version="1.0.0",
+    description="Agent for analyzing NBA player and team performance metrics",
+    tags={
+        "domain": "sports_analytics",
+        "primary_use_case": "player_evaluation",
+        "target_users": "coaches,scouts,analysts"
+    }
+)
+```
