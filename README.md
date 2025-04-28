@@ -34,7 +34,7 @@ This repository provides a complete blueprint for creating effective AI agents o
 ```
 %pip install -U databricks-cli
 dbutils.fs.mkdirs("/Repos/databricks-agent-playbook")
-%sh git clone https://github.com/yourusername/databricks-agent-playbook.git /Repos/databricks-agent-playbook
+%sh git clone https://github.com/AngelaGibson1/Databricks_AI_NBA_Agent
 ```
 
 2. Run the setup notebook to prepare your environment:
@@ -43,45 +43,8 @@ dbutils.fs.mkdirs("/Repos/databricks-agent-playbook")
 dbutils.notebook.run("/Repos/databricks-agent-playbook/notebooks/setup/setup_environment.py", 600)
 ```
 
-3. Explore the example agents:
 
-- NBA Analysis Agent: `/Repos/databricks-agent-playbook/notebooks/agents/nba_analysis_agent.py`
-- Draft Scout Agent: `/Repos/databricks-agent-playbook/notebooks/agents/draft_scout_agent.py`
 
-4. Adapt the templates to your use case:
-
-- Agent Template: `/Repos/databricks-agent-playbook/resources/templates/agent_template.py`
-- Function Template: `/Repos/databricks-agent-playbook/resources/templates/function_template.py`
-
-## Project Structure
-
-The repository is organized into the following key sections:
-
-- `notebooks/`: Databricks notebooks for agent implementation
-  - `agents/`: Agent definitions
-  - `functions/`: Function implementations
-  - `toolkits/`: Toolkit implementations
-  - `deployment/`: Deployment scripts
-  - `testing/`: Testing notebooks
-- `src/`: Source code (for packaging)
-- `docs/`: Documentation
-- `config/`: Configuration files
-- `examples/`: Example implementations
-- `resources/`: Additional resources like templates
-
-## Documentation
-
-Comprehensive documentation is available in the `docs/` folder:
-
-- [Architecture Guide](docs/architecture/agent-architecture.md)
-- [Function Design Best Practices](docs/best-practices/function-design.md)
-- [Prompt Engineering Guide](docs/best-practices/prompt-engineering.md)
-- [Testing Methodology](docs/best-practices/testing-agents.md)
-- [Deployment Guide](docs/implementation/deployment-guide.md)
-
-## Examples
-
-This repository includes several practical examples:
 
 ### NBA Analytics Agent
 
@@ -92,23 +55,4 @@ A complete implementation of an agent that analyzes NBA player and team performa
 - Visualization capabilities
 - Contextual memory management
 
-### Finance Analysis Agent
 
-An agent specialized in financial analysis and reporting. This example demonstrates:
-
-- Budget variance analysis
-- Spend pattern detection
-- Forecast generation
-- Alert management
-
-## Contributing
-
-We welcome contributions to the Databricks Agent Playbook! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to submit pull requests, report issues, or request features.
-
-## License
-
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-For questions and support, please open an issue in the GitHub repository.
